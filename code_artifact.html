@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卢宝网球元气新年壁纸生成器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 适配国内极速加载：移除海外字体外链，使用本地优雅衬线体与圆体栈，微信内打开0延迟 -->
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+        }
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 9999px;
+        }
+        .canvas-shadow {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col lg:flex-row overflow-x-hidden">
+
+    <!-- 左侧控制面板 -->
+    <aside class="w-full lg:w-96 bg-slate-900/95 border-b lg:border-b-0 lg:border-r border-slate-800 p-6 flex flex-col gap-6 z-10 shrink-0">
+        <div>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold mb-2">
+                <span>🎾</span>
+                <span>2027 LUCKY TENNIS EDITION</span>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight text-white">卢宝 2027 元气壁纸坊</h1>
+            <p class="text-xs text-slate-400 mt-1 leading-relaxed">
+                灵感源自月历册的硬地蓝、红土赤、草地绿与室内紫，融合 Q 萌大眼表情与 <span class="text-amber-300 font-semibold">Be Kind. / Play for the Kids.</span> 暖心祝福！
+            </p>
+        </div>
+
+        <!-- 1. 选择月份主题（自动匹配赛季色彩与专属祝福语） -->
+        <div class="space-y-2.5">
+            <div class="flex items-center justify-between">
+                <label class="text-xs font-bold uppercase tracking-wider text-slate-400">1. 选择月份主题 (赛季色系)</label>
+                <span id="seasonBadge" class="text-[11px] px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-300 font-medium">Hard Court Blue</span>
+            </div>
+            <div id="monthGrid" class="grid grid-cols-4 gap-2">
+                <!-- JS 动态填充 1-12 月按钮 -->
+            </div>
+        </div>
+
+        <!-- 2. 切换人物主角表情 -->
+        <div class="space-y-2.5">
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-400">2. 切换主角限定表情</label>
+            <div id="moodGrid" class="grid grid-cols-2 gap-2">
+                <!-- JS 动态填充表情选项 -->
+            </div>
+        </div>
+
+        <!-- 3. 排版风格与元素开关 -->
+        <div class="space-y-3 bg-slate-800/50 p-4 rounded-2xl border border-slate-700/60">
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-400 block">3. 画面细节定制</label>
+            
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-200">背景暗纹涂鸦波普层</span>
+                <input type="checkbox" id="toggleDoodle" checked class="w-4 h-4 accent-amber-400 rounded cursor-pointer">
+            </div>
+
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-200">网球大满贯/赛事彩蛋</span>
+                <input type="checkbox" id="toggleTourney" checked class="w-4 h-4 accent-amber-400 rounded cursor-pointer">
+            </div>
+
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-slate-200">飘落幸运星与网球粒子</span>
+                <input type="checkbox" id="toggleSparkles" checked class="w-4 h-4 accent-amber-400 rounded cursor-pointer">
+            </div>
+
+            <div class="pt-1">
+                <span class="text-xs text-slate-400 block mb-1.5">自定义英文祝福语（支持一键填入名言）</span>
+                <div class="flex flex-wrap gap-1.5 mb-2">
+                    <button type="button" onclick="applyPresetQuote('Be kind. Always bring light and warmth wherever you go in 2027.')" 
+                        class="text-[11px] px-2.5 py-1 rounded-lg bg-amber-400/15 hover:bg-amber-400/25 text-amber-300 border border-amber-400/30 transition cursor-pointer">
+                        💛 Be kind.
+                    </button>
+                    <button type="button" onclick="applyPresetQuote('Play for the kids. Play for the light. Wishing you pure joy in 2027!')" 
+                        class="text-[11px] px-2.5 py-1 rounded-lg bg-sky-400/15 hover:bg-sky-400/25 text-sky-300 border border-sky-400/30 transition cursor-pointer">
+                        🧸 Play for the kids.
+                    </button>
+                    <button type="button" onclick="applyPresetQuote('Be kind. Play for the kids. Let every swing bring love & good luck in 2027!')" 
+                        class="text-[11px] px-2.5 py-1 rounded-lg bg-emerald-400/15 hover:bg-emerald-400/25 text-emerald-300 border border-emerald-400/30 transition cursor-pointer">
+                        ✨ 双金句合体
+                    </button>
+                </div>
+                <input type="text" id="customQuoteInput" placeholder="点击上方标签或输入自定义英文祝福..." 
+                    class="w-full px-3 py-2 text-xs bg-slate-900 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 transition">
+            </div>
+        </div>
+
+        <!-- 操作按钮区 -->
+        <div class="mt-auto pt-2 flex flex-col gap-2.5">
+            <div class="grid grid-cols-2 gap-2">
+                <button id="randomBtn" class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-slate-700 cursor-pointer">
+                    <span>🎲</span> 随机搭配
+                </button>
+                <button id="shareCodeBtn" class="py-2.5 px-3 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-indigo-400/40 cursor-pointer">
+                    <span>🔗</span> 复制同款口令
+                </button>
+            </div>
+            <button id="downloadBtn" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 hover:brightness-110 text-slate-950 font-bold text-sm shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-2 cursor-pointer">
+                <span>⬇️</span> 生成并保存 2K 超清壁纸
+            </button>
+        </div>
+    </aside>
+
+    <!-- 右侧壁纸实时预览区 -->
+    <main class="flex-1 flex flex-col items-center justify-center p-4 sm:p-8 lg:p-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 via-slate-950 to-black relative">
+        
+        <!-- 顶部提示栏 -->
+        <div class="w-full max-w-5xl flex flex-wrap items-center justify-between gap-2 mb-4 px-1">
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>手机/电脑双端适配 • 2K 超清画布 (2560 × 1440)</span>
+            </div>
+            <div id="toastMsg" class="opacity-0 transition-opacity duration-300 text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                ✨ 操作成功！
+            </div>
+        </div>
+
+        <!-- Canvas 容器（保持 16:9 响应式比例） -->
+        <div class="w-full max-w-5xl aspect-video rounded-2xl overflow-hidden canvas-shadow bg-white relative group">
+            <canvas id="wallpaperCanvas" class="w-full h-full block"></canvas>
+        </div>
+
+        <!-- 粘贴好友口令小条（方便手机/电脑直接还原同款） -->
+        <div class="w-full max-w-5xl mt-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/80 border border-slate-800 rounded-2xl px-4 py-3">
+            <p class="text-xs text-slate-400">
+                💡 收到朋友的搭配口令？粘贴到右侧即可秒还原同款设计 🍀
+            </p>
+            <div class="flex w-full sm:w-auto items-center gap-2">
+                <input type="text" id="importCodeInput" placeholder="粘贴口令，如: RUBLEV2027#10-birthday" 
+                    class="flex-1 sm:w-64 px-3 py-1.5 text-xs bg-slate-950 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-amber-400">
+                <button id="applyCodeBtn" class="px-3 py-1.5 rounded-xl bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 text-xs font-semibold transition shrink-0 cursor-pointer">
+                    还原同款
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 手机/微信端长按保存高清原图弹窗 -->
+    <div id="exportModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-5 sm:p-6 flex flex-col items-center gap-4 shadow-2xl">
+            <div class="w-full flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">🎉</span>
+                    <h3 class="text-base font-bold text-white">2K 超清壁纸已就绪</h3>
+                </div>
+                <button id="closeModalBtn" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center text-sm cursor-pointer">✕</button>
+            </div>
+            <p class="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/30 px-3.5 py-2 rounded-xl w-full text-center">
+                📱 手机端请直接 <strong>长按下方图片 → 保存到手机相册</strong>（电脑端已同步自动下载）
+            </p>
+            <div class="w-full rounded-2xl overflow-hidden border border-slate-700 bg-white">
+                <img id="exportedImage" alt="卢宝2027新年壁纸" class="w-full h-auto block select-all">
+            </div>
+            <button id="modalDownloadBtn" class="w-full py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs transition cursor-pointer">
+                ⬇️ 再次触发直接下载 PNG 文件
+            </button>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * 12个月份主题配置表
+         * 严格呼应月历册中的色彩体系：
+         * 1-3月: 澳网/阳光双赛 -> 硬地清爽天蓝 (Hard Court Blue)
+         * 4-6月: 蒙特卡洛/马德里/法网 -> 炽热红土赤红 (Clay Court Crimson)
+         * 7-9月: 温网/北美硬地美网 -> 温布尔登草地翠绿 (Grass Court Emerald)
+         * 10-12月: 上海大师赛/年终总决赛 -> 室内冠军星耀紫 (Indoor Royal Purple)
+         */
+        const MONTH_THEMES = [
+            {
+                month: "January", short: "JAN", num: "01",
+                season: "Hard Court Blue",
+                bgGradient: ["#e0f2fe", "#bae6fd", "#f0f9ff"],
+                primary: "#0284c7",
+                secondary: "#0369a1",
+                accent: "#facc15",
+                bandColor: "#0284c7",
+                shirtColor: "#0ea5e9",
+                headline: "BE KIND & ACE 2027",
+                subQuote: "Be kind. Play for the kids, play for the light, and let every dream take flight in 2027!",
+                tourneyTag: "MELBOURNE MAGIC • BE KIND",
+                defaultMood: "trio"
+            },
+            {
+                month: "February", short: "FEB", num: "02",
+                season: "Hard Court Blue",
+                bgGradient: ["#dbeafe", "#eff6ff", "#bae6fd"],
+                primary: "#2563eb",
+                secondary: "#1d4ed8",
+                accent: "#fbbf24",
+                bandColor: "#1d4ed8",
+                shirtColor: "#3b82f6",
+                headline: "PLAY FOR THE KIDS",
+                subQuote: "Play for the kids, swing with pure heart, and chase your brightest victories in 2027.",
+                tourneyTag: "DOHA & DUBAI • PLAY FOR THE LIGHT",
+                defaultMood: "smash"
+            },
+            {
+                month: "March", short: "MAR", num: "03",
+                season: "Sunshine Blue",
+                bgGradient: ["#e0f2fe", "#fef9c3", "#e0f2fe"],
+                primary: "#0369a1",
+                secondary: "#0c4a6e",
+                accent: "#eab308",
+                bandColor: "#0284c7",
+                shirtColor: "#38bdf8",
+                headline: "BE KIND. STAY SUNNY.",
+                subQuote: "Be kind to yourself, stay playful, and let good fortune bloom all around you.",
+                tourneyTag: "SUNSHINE DOUBLE • PURE JOY",
+                defaultMood: "chill"
+            },
+            {
+                month: "April", short: "APR", num: "04",
+                season: "Clay Court Red",
+                bgGradient: ["#fee2e2", "#ffedd5", "#fef2f2"],
+                primary: "#dc2626",
+                secondary: "#991b1b",
+                accent: "#f59e0b",
+                bandColor: "#dc2626",
+                shirtColor: "#ef4444",
+                headline: "FIERY PASSION, GENTLE HEART",
+                subQuote: "Play for the kids and turn every wild rally into a lucky, joyful breakthrough!",
+                tourneyTag: "MONTE-CARLO & MADRID • CLAY HEART",
+                defaultMood: "shocked"
+            },
+            {
+                month: "May", short: "MAY", num: "05",
+                season: "Roland-Garros Red",
+                bgGradient: ["#ffe4e6", "#fecdd3", "#fff1f2"],
+                primary: "#e11d48",
+                secondary: "#881337",
+                accent: "#fbbf24",
+                bandColor: "#ffffff",
+                bandLogoColor: "#e11d48",
+                shirtColor: "#e11d48",
+                headline: "BE KIND. STAND TALL.",
+                subQuote: "Be kind, stay humble, and step onto your court—greatness and glory are already yours.",
+                tourneyTag: "PARIS CLAY • GRAND SLAM SPIRIT",
+                defaultMood: "boss"
+            },
+            {
+                month: "June", short: "JUN", num: "06",
+                season: "Summer Clay & Grass",
+                bgGradient: ["#ffedd5", "#fee2e2", "#fef3c7"],
+                primary: "#ea580c",
+                secondary: "#9a3412",
+                accent: "#16a34a",
+                bandColor: "#dc2626",
+                shirtColor: "#ef4444",
+                headline: "PLAY FOR THE LIGHT",
+                subQuote: "Play for the kids, share your warmest smile, and enjoy effortless summer luck.",
+                tourneyTag: "HALLE & SUMMER • EASY BREEZY",
+                defaultMood: "wink"
+            },
+            {
+                month: "July", short: "JUL", num: "07",
+                season: "Wimbledon Emerald",
+                bgGradient: ["#dcfce7", "#fef9c3", "#ecfdf5"],
+                primary: "#15803d",
+                secondary: "#14532d",
+                accent: "#facc15",
+                bandColor: "#ffffff",
+                bandLogoColor: "#15803d",
+                shirtColor: "#ffffff",
+                headline: "FUEL UP & BE KIND",
+                subQuote: "Be kind, keep your energy sweet, and shine bright on every grass court of 2027!",
+                tourneyTag: "WIMBLEDON WHITE • BANANA POWER",
+                defaultMood: "banana"
+            },
+            {
+                month: "August", short: "AUG", num: "08",
+                season: "Summer Court Green",
+                bgGradient: ["#d1fae5", "#ecfccb", "#dcfce7"],
+                primary: "#059669",
+                secondary: "#065f46",
+                accent: "#84cc16",
+                bandColor: "#16a34a",
+                shirtColor: "#22c55e",
+                headline: "PLAY FOR THE KIDS",
+                subQuote: "Focus your eyes on the prize—kindness, prosperity, and luck follow every swing.",
+                tourneyTag: "NORTH AMERICAN SWING • LOCKED IN",
+                defaultMood: "pout"
+            },
+            {
+                month: "September", short: "SEP", num: "09",
+                season: "Grand Slam Green",
+                bgGradient: ["#ecfccb", "#dcfce7", "#f0fdf4"],
+                primary: "#16a34a",
+                secondary: "#14532d",
+                accent: "#eab308",
+                bandColor: "#84cc16",
+                shirtColor: "#15803d",
+                headline: "ROAR WITH KINDNESS",
+                subQuote: "Shout your dreams out loud—the universe is cheering in your corner all 2027!",
+                tourneyTag: "NEW YORK NIGHTS • BWEH ENERGY",
+                defaultMood: "roar"
+            },
+            {
+                month: "October", short: "OCT", num: "10",
+                season: "Indoor Royal Purple",
+                bgGradient: ["#ede9fe", "#e0e7ff", "#f5f3ff"],
+                primary: "#4f46e5",
+                secondary: "#312e81",
+                accent: "#facc15",
+                bandColor: "#3730a3",
+                shirtColor: "#4338ca",
+                headline: "BIRTHDAY WISHES & LIGHT",
+                subQuote: "Happy Oct 20 Birthday! Be kind, play for the kids, and may 2027 bring sweet cakes & magic!",
+                tourneyTag: "OCT 20 • HAPPY BIRTHDAY RUBLO",
+                defaultMood: "birthday"
+            },
+            {
+                month: "November", short: "NOV", num: "11",
+                season: "Champion Indigo",
+                bgGradient: ["#e0e7ff", "#ede9fe", "#fae8ff"],
+                primary: "#6d28d9",
+                secondary: "#4c1d95",
+                accent: "#fbbf24",
+                bandColor: "#4f46e5",
+                shirtColor: "#6366f1",
+                headline: "CHAMPION OF KINDNESS",
+                subQuote: "Play for the kids—every hard-fought rally leads to golden trophies and lasting joy.",
+                tourneyTag: "PARIS & TURIN FINALS • TROPHY TIME",
+                defaultMood: "trophy"
+            },
+            {
+                month: "December", short: "DEC", num: "12",
+                season: "Festive Violet",
+                bgGradient: ["#f3e8ff", "#fce7f3", "#ede9fe"],
+                primary: "#7e22ce",
+                secondary: "#581c87",
+                accent: "#f59e0b",
+                bandColor: "#7e22ce",
+                shirtColor: "#9333ea",
+                headline: "BE KIND. BLESSED 2027.",
+                subQuote: "Wrapped in warmth, gratitude, and endless good fortune—always be kind.",
+                tourneyTag: "COFFEE TIME • COZY & BLESSED",
+                defaultMood: "coffee"
+            }
+        ];
+
+        /**
+         * 人物表情库配置（还原月历册中的名场面表情）
+         */
+        const MOOD_LIST = [
+            { id: "trio", name: "1月·三小只趴趴乐", icon: "👀" },
+            { id: "smash", name: "2月·飞身暴扣网球", icon: "🎾" },
+            { id: "chill", name: "3月·抱膝乖巧呆萌", icon: "🥺" },
+            { id: "shocked", name: "4月·汗流浃背惊呆", icon: "😱" },
+            { id: "boss", name: "5月·叉腰霸气自信", icon: "😤" },
+            { id: "wink", name: "6月·趴卧俏皮wink", icon: "😉" },
+            { id: "banana", name: "7月·补充能量香蕉", icon: "🍌" },
+            { id: "pout", name: "8月·鼓腮全力接球", icon: "😠" },
+            { id: "roar", name: "9月·经典呐喊BWEH", icon: "🦁" },
+            { id: "birthday", name: "10.20·鼓腮吹生日蛋糕", icon: "🎂" },
+            { id: "dizzy", name: "10月·网球砸头晕晕", icon: "😵‍💫" },
+            { id: "trophy", name: "11月·高举冠军奖杯", icon: "🏆" },
+            { id: "coffee", name: "12月·惬意Coffee Time", icon: "☕" }
+        ];
+
+        // 全局状态
+        let state = {
+            monthIndex: 0,
+            mood: "trio",
+            showDoodle: true,
+            showTourney: true,
+            showSparkles: true,
+            customQuote: ""
+        };
+
+        const canvas = document.getElementById("wallpaperCanvas");
+        const ctx = canvas.getContext("2d");
+
+        // 设定超清 2K 壁纸内部分辨率 (2560 x 1440)
+        const W = 2560;
+        const H = 1440;
+        canvas.width = W;
+        canvas.height = H;
+
+        // 初始化 UI 按钮
+        function initUI() {
+            const monthGrid = document.getElementById("monthGrid");
+            MONTH_THEMES.forEach((item, idx) => {
+                const btn = document.createElement("button");
+                btn.className = `py-2 px-1 rounded-xl text-xs font-bold transition border cursor-pointer flex flex-col items-center gap-0.5 ${
+                    idx === state.monthIndex
+                        ? "bg-amber-400 text-slate-950 border-amber-300 shadow-md"
+                        : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
+                }`;
+                btn.innerHTML = `<span class="text-[10px] opacity-70">${item.num}</span><span>${item.short}</span>`;
+                btn.onclick = () => {
+                    state.monthIndex = idx;
+                    state.mood = item.defaultMood;
+                    updateUIActiveStates();
+                    renderWallpaper();
+                };
+                monthGrid.appendChild(btn);
+            });
+
+            const moodGrid = document.getElementById("moodGrid");
+            MOOD_LIST.forEach((m) => {
+                const btn = document.createElement("button");
+                btn.dataset.mood = m.id;
+                btn.className = `py-2 px-2.5 rounded-xl text-xs font-medium transition border text-left flex items-center gap-2 cursor-pointer ${
+                    m.id === state.mood
+                        ? "bg-sky-500/20 text-sky-200 border-sky-400"
+                        : "bg-slate-800/60 text-slate-300 border-slate-700/80 hover:bg-slate-800"
+                }`;
+                btn.innerHTML = `<span class="text-base">${m.icon}</span><span class="truncate">${m.name}</span>`;
+                btn.onclick = () => {
+                    state.mood = m.id;
+                    updateUIActiveStates();
+                    renderWallpaper();
+                };
+                moodGrid.appendChild(btn);
+            });
+
+            // 监听开关与输入
+            document.getElementById("toggleDoodle").onchange = (e) => {
+                state.showDoodle = e.target.checked;
+                renderWallpaper();
+            };
+            document.getElementById("toggleTourney").onchange = (e) => {
+                state.showTourney = e.target.checked;
+                renderWallpaper();
+            };
+            document.getElementById("toggleSparkles").onchange = (e) => {
+                state.showSparkles = e.target.checked;
+                renderWallpaper();
+            };
+            document.getElementById("customQuoteInput").oninput = (e) => {
+                state.customQuote = e.target.value.trim();
+                renderWallpaper();
+            };
+
+            // 快捷填入经典语录方法
+            window.applyPresetQuote = (text) => {
+                const input = document.getElementById("customQuoteInput");
+                input.value = text;
+                state.customQuote = text;
+                renderWallpaper();
+            };
+
+            // 随机组合按钮
+            document.getElementById("randomBtn").onclick = () => {
+                state.monthIndex = Math.floor(Math.random() * MONTH_THEMES.length);
+                state.mood = MOOD_LIST[Math.floor(Math.random() * MOOD_LIST.length)].id;
+                updateUIActiveStates();
+                renderWallpaper();
+            };
+
+            // 复制同款搭配口令（兼顾 iframe 兼容性）
+            document.getElementById("shareCodeBtn").onclick = () => {
+                const quotePart = state.customQuote ? `|${encodeURIComponent(state.customQuote)}` : "";
+                const code = `RUBLEV2027#${state.monthIndex + 1}-${state.mood}${quotePart}`;
+                const tempInput = document.createElement("input");
+                tempInput.value = code;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                showToast("🔗 已复制搭配口令！快发给朋友粘贴吧~");
+            };
+
+            // 解析并还原好友搭配口令
+            document.getElementById("applyCodeBtn").onclick = () => {
+                const raw = document.getElementById("importCodeInput").value.trim();
+                const match = raw.match(/RUBLEV2027#(\d+)-([a-z_]+)(?:\|(.*))?/i);
+                if (!match) {
+                    showToast("⚠️ 口令格式不对哦，请检查是否完整复制");
+                    return;
+                }
+                const mIdx = Math.min(11, Math.max(0, parseInt(match[1], 10) - 1));
+                const moodId = match[2];
+                const customQ = match[3] ? decodeURIComponent(match[3]) : "";
+
+                state.monthIndex = mIdx;
+                if (MOOD_LIST.some(m => m.id === moodId)) {
+                    state.mood = moodId;
+                }
+                state.customQuote = customQ;
+                document.getElementById("customQuoteInput").value = customQ;
+                updateUIActiveStates();
+                renderWallpaper();
+                showToast("✨ 已成功还原好友同款壁纸搭配！");
+            };
+
+            // 导出壁纸（兼容手机端长按保存 + 电脑端自动下载）
+            const triggerSave = () => {
+                const theme = MONTH_THEMES[state.monthIndex];
+                const dataUrl = canvas.toDataURL("image/png", 1.0);
+
+                // 1. 弹出高清原图弹窗（确保手机端微信/浏览器100%可长按保存相册）
+                const modal = document.getElementById("exportModal");
+                const imgEl = document.getElementById("exportedImage");
+                imgEl.src = dataUrl;
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+
+                // 2. 同时触发桌面端自动文件下载
+                const link = document.createElement("a");
+                link.download = `Rublev_2027_${theme.month}_BeKind_Wallpaper.png`;
+                link.href = dataUrl;
+                link.click();
+
+                showToast("✨ 2K 超清壁纸已生成！");
+            };
+
+            document.getElementById("downloadBtn").onclick = triggerSave;
+            document.getElementById("modalDownloadBtn").onclick = triggerSave;
+            document.getElementById("closeModalBtn").onclick = () => {
+                const modal = document.getElementById("exportModal");
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+            };
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById("toastMsg");
+            toast.textContent = msg;
+            toast.style.opacity = "1";
+            setTimeout(() => { toast.style.opacity = "0"; }, 3200);
+        }
+
+        function updateUIActiveStates() {
+            const theme = MONTH_THEMES[state.monthIndex];
+            document.getElementById("seasonBadge").textContent = theme.season;
+
+            // 更新月份按钮样式
+            const monthBtns = document.getElementById("monthGrid").children;
+            Array.from(monthBtns).forEach((btn, idx) => {
+                if (idx === state.monthIndex) {
+                    btn.className = "py-2 px-1 rounded-xl text-xs font-bold transition border cursor-pointer flex flex-col items-center gap-0.5 bg-amber-400 text-slate-950 border-amber-300 shadow-md";
+                } else {
+                    btn.className = "py-2 px-1 rounded-xl text-xs font-bold transition border cursor-pointer flex flex-col items-center gap-0.5 bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700";
+                }
+            });
+
+            // 更新表情按钮样式
+            const moodBtns = document.getElementById("moodGrid").children;
+            Array.from(moodBtns).forEach((btn) => {
+                if (btn.dataset.mood === state.mood) {
+                    btn.className = "py-2 px-2.5 rounded-xl text-xs font-medium transition border text-left flex items-center gap-2 cursor-pointer bg-sky-500/20 text-sky-200 border-sky-400";
+                } else {
+                    btn.className = "py-2 px-2.5 rounded-xl text-xs font-medium transition border text-left flex items-center gap-2 cursor-pointer bg-slate-800/60 text-slate-300 border-slate-700/80 hover:bg-slate-800";
+                }
+            });
+        }
+
+        /**
+         * 核心绘画函数：渲染整张 2560x1440 壁纸
+         */
+        function renderWallpaper() {
+            const theme = MONTH_THEMES[state.monthIndex];
+            ctx.clearRect(0, 0, W, H);
+
+            // 1. 绘制柔和的赛季主题渐变背景
+            const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+            bgGrad.addColorStop(0, theme.bgGradient[0]);
+            bgGrad.addColorStop(0.5, theme.bgGradient[1]);
+            bgGrad.addColorStop(1, theme.bgGradient[2]);
+            ctx.fillStyle = bgGrad;
+            ctx.fillRect(0, 0, W, H);
+
+            // 2. 绘制网球场边界几何线条（高级现代设计感，替代死板的日历格子）
+            drawCourtLines(theme);
+
+            // 3. 绘制背景满版半透明 Q 版涂鸦暗纹（致敬原月历册的背景拼贴风格）
+            if (state.showDoodle) {
+                drawBackgroundDoodlePattern(theme);
+            }
+
+            // 4. 绘制飘浮幸运粒子与网球装饰
+            if (state.showSparkles) {
+                drawLuckyParticles(theme);
+            }
+
+            // 5. 左侧杂志级英文新年祝福排版区
+            drawTypographyEditorial(theme);
+
+            // 6. 右侧主视觉画框 / 艺术舞台 & 卢宝 Q 萌角色绘制
+            drawCharacterStage(theme, state.mood);
+        }
+
+        /**
+         * 绘制极简网球场线艺术构图
+         */
+        function drawCourtLines(theme) {
+            ctx.save();
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.72)";
+            ctx.lineWidth = 10;
+
+            // 外框线
+            ctx.strokeRect(90, 90, W - 180, H - 180);
+
+            // 左侧发球区装饰线
+            ctx.beginPath();
+            ctx.moveTo(90, H * 0.22);
+            ctx.lineTo(W * 0.56, H * 0.22);
+            ctx.moveTo(90, H * 0.78);
+            ctx.lineTo(W * 0.56, H * 0.78);
+            ctx.moveTo(W * 0.56, 90);
+            ctx.lineTo(W * 0.56, H - 90);
+            ctx.stroke();
+
+            // 柔和光晕圆
+            const glow = ctx.createRadialGradient(W * 0.74, H * 0.5, 50, W * 0.74, H * 0.5, 680);
+            glow.addColorStop(0, "rgba(255, 255, 255, 0.85)");
+            glow.addColorStop(1, "rgba(255, 255, 255, 0)");
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(W * 0.74, H * 0.5, 680, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        /**
+         * 绘制背景暗纹涂鸦层（Q版头像轮廓、网球、奖杯、V字发带元素平铺）
+         */
+        function drawBackgroundDoodlePattern(theme) {
+            ctx.save();
+            ctx.globalAlpha = 0.08;
+            ctx.strokeStyle = theme.secondary;
+            ctx.fillStyle = theme.primary;
+            ctx.lineWidth = 6;
+
+            const cols = 6;
+            const rows = 4;
+            const cellW = W / cols;
+            const cellH = H / rows;
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cx = c * cellW + cellW * 0.5 + (r % 2 === 0 ? 30 : -30);
+                    const cy = r * cellH + cellH * 0.5;
+                    const rot = ((r * 7 + c * 13) % 40 - 20) * (Math.PI / 180);
+
+                    ctx.save();
+                    ctx.translate(cx, cy);
+                    ctx.rotate(rot);
+
+                    const type = (r + c) % 4;
+                    if (type === 0) {
+                        // 迷你Q版头像暗纹
+                        drawMiniChibiOutline(0, 0, 110);
+                    } else if (type === 1) {
+                        // 网球暗纹
+                        drawTennisBall(0, 0, 65, theme.secondary, false);
+                    } else if (type === 2) {
+                        // 奖杯暗纹
+                        drawTrophyIcon(0, 0, 85, theme.secondary);
+                    } else {
+                        // 咖啡杯 / 幸运星暗纹
+                        drawStar(0, 0, 5, 70, 32, theme.primary);
+                    }
+
+                    ctx.restore();
+                }
+            }
+            ctx.restore();
+        }
+
+        function drawMiniChibiOutline(x, y, radius) {
+            // 头发蓬松轮廓
+            ctx.beginPath();
+            ctx.arc(x, y, radius, Math.PI * 0.85, Math.PI * 2.15);
+            ctx.stroke();
+            // 发带
+            ctx.beginPath();
+            ctx.rect(x - radius * 0.88, y - radius * 0.25, radius * 1.76, radius * 0.28);
+            ctx.stroke();
+            // 两只大眼睛
+            ctx.beginPath();
+            ctx.arc(x - radius * 0.42, y + radius * 0.28, radius * 0.34, 0, Math.PI * 2);
+            ctx.arc(x + radius * 0.42, y + radius * 0.28, radius * 0.34, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        /**
+         * 绘制幸运星光与网球点缀
+         */
+        function drawLuckyParticles(theme) {
+            const items = [
+                { x: 220, y: 240, size: 28, type: "star" },
+                { x: 1260, y: 210, size: 34, type: "ball" },
+                { x: 1320, y: 1180, size: 26, type: "star" },
+                { x: 240, y: 1210, size: 32, type: "ball" },
+                { x: 2360, y: 260, size: 36, type: "star" },
+                { x: 2380, y: 1160, size: 30, type: "star" },
+                { x: 1520, y: 190, size: 22, type: "sparkle" },
+                { x: 1480, y: 1250, size: 24, type: "sparkle" }
+            ];
+
+            items.forEach(item => {
+                ctx.save();
+                if (item.type === "star") {
+                    drawStar(item.x, item.y, 4, item.size, item.size * 0.35, theme.accent);
+                } else if (item.type === "ball") {
+                    drawTennisBall(item.x, item.y, item.size, "#bef264", true);
+                } else {
+                    drawStar(item.x, item.y, 4, item.size, item.size * 0.25, "#ffffff");
+                }
+                ctx.restore();
+            });
+        }
+
+        /**
+         * 绘制左侧杂志感英文排版与新年祝福语
+         */
+        function drawTypographyEditorial(theme) {
+            const leftX = 185;
+
+            ctx.save();
+
+            // 1. 顶部胶囊标签：2027 LUCKY EDITION
+            const badgeText = state.showTourney ? `2027 • ${theme.tourneyTag}` : `2027 NEW YEAR WISHES • NO.${theme.num}`;
+            ctx.font = "700 28px 'Plus Jakarta Sans', sans-serif";
+            const badgeWidth = ctx.measureText(badgeText).width + 64;
+
+            ctx.fillStyle = theme.primary;
+            roundRect(ctx, leftX, 175, badgeWidth, 62, 31);
+            ctx.fill();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.textBaseline = "middle";
+            ctx.fillText(badgeText, leftX + 32, 207);
+
+            // 2. 超大艺术衬线体月份标题（带白色立体描边，还原月历册经典标题质感）
+            ctx.font = "900 215px 'Playfair Display', Georgia, serif";
+            ctx.textBaseline = "alphabetic";
+
+            // 柔和投影
+            ctx.save();
+            ctx.shadowColor = "rgba(15, 23, 42, 0.16)";
+            ctx.shadowBlur = 24;
+            ctx.shadowOffsetY = 12;
+            ctx.lineWidth = 22;
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineJoin = "round";
+            ctx.strokeText(theme.month, leftX, 470);
+            ctx.restore();
+
+            // 月份主填充渐变
+            const titleGrad = ctx.createLinearGradient(leftX, 300, leftX, 490);
+            titleGrad.addColorStop(0, theme.primary);
+            titleGrad.addColorStop(1, theme.secondary);
+            ctx.fillStyle = titleGrad;
+            ctx.fillText(theme.month, leftX, 470);
+
+            // 右上角装饰年份水印 ('27)
+            ctx.font = "700 44px 'Fredoka', sans-serif";
+            ctx.fillStyle = theme.accent;
+            ctx.fillText("✦ '27", leftX + ctx.measureText(theme.month).width + 24, 345);
+
+            // 3. 装饰分割线 + 网球小图标
+            ctx.strokeStyle = theme.primary;
+            ctx.lineWidth = 6;
+            ctx.beginPath();
+            ctx.moveTo(leftX, 535);
+            ctx.lineTo(leftX + 160, 535);
+            ctx.stroke();
+
+            drawTennisBall(leftX + 205, 535, 18, "#bef264", true);
+
+            // 4. 新年核心吉利主标语 (Headline)
+            ctx.font = "700 76px 'Fredoka', sans-serif";
+            ctx.fillStyle = "#0f172a";
+            const headlineLines = wrapText(ctx, theme.headline, 1080);
+            let currentY = 645;
+            headlineLines.forEach(line => {
+                ctx.fillText(line, leftX, currentY);
+                currentY += 92;
+            });
+
+            // 5. 新年暖心祝福长句（支持用户自定义覆盖）
+            const quoteToDraw = state.customQuote || theme.subQuote;
+            ctx.font = "600 40px 'Plus Jakarta Sans', sans-serif";
+            ctx.fillStyle = "#334155";
+            const quoteLines = wrapText(ctx, `“${quoteToDraw}”`, 1040);
+            currentY += 18;
+            quoteLines.forEach(line => {
+                ctx.fillText(line, leftX, currentY);
+                currentY += 56;
+            });
+
+            // 6. 底部新年好运与卢宝经典签名徽章（融入 Be kind. 与 Play for the kids.）
+            const luckyTags = [
+                { emoji: "💛", label: "BE KIND." },
+                { emoji: "🧸", label: "PLAY FOR THE KIDS." },
+                { emoji: "🍀", label: "LUCKY 2027" }
+            ];
+            let pillX = leftX;
+            const pillY = 1130;
+            ctx.font = "700 26px 'Plus Jakarta Sans', sans-serif";
+
+            luckyTags.forEach(tag => {
+                const text = `${tag.emoji}  ${tag.label}`;
+                const pw = ctx.measureText(text).width + 48;
+                
+                ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+                roundRect(ctx, pillX, pillY, pw, 64, 20);
+                ctx.fill();
+
+                ctx.strokeStyle = theme.primary + "55";
+                ctx.lineWidth = 3;
+                ctx.stroke();
+
+                ctx.fillStyle = theme.secondary;
+                ctx.textBaseline = "middle";
+                ctx.fillText(text, pillX + 24, pillY + 33);
+
+                pillX += pw + 20;
+            });
+
+            ctx.restore();
+        }
+
+        /**
+         * 右侧主视觉舞台与 Q 萌网球少年角色精细绘制
+         */
+        function drawCharacterStage(theme, mood) {
+            const centerX = 1910;
+            const centerY = 740;
+
+            ctx.save();
+
+            // 1. 绘制拍立得/徽章式艺术背景圆盘
+            ctx.save();
+            ctx.shadowColor = "rgba(15, 23, 42, 0.14)";
+            ctx.shadowBlur = 45;
+            ctx.shadowOffsetY = 20;
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 470, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // 内圈主题色双环
+            ctx.strokeStyle = theme.primary;
+            ctx.lineWidth = 10;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 438, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = theme.accent;
+            ctx.lineWidth = 5;
+            ctx.setLineDash([18, 14]);
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 415, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 10月或生日表情专属：撒落彩色生日纸屑与小气球彩蛋
+            if (theme.month === "October" || mood === "birthday") {
+                drawBirthdayConfetti(centerX, centerY);
+            }
+
+            // 2. 根据不同表情动作绘制角色
+            if (mood === "trio") {
+                // 1月限定：三小只趴在一起探头（还原第2页右上角经典画面）
+                drawRublevCharacter(centerX - 240, centerY + 40, 0.62, theme, "angry_cute", "crawl");
+                drawRublevCharacter(centerX + 240, centerY + 40, 0.62, theme, "happy", "crawl");
+                drawRublevCharacter(centerX, centerY + 65, 0.72, theme, "happy", "crawl");
+            } else {
+                // 单人超大高清特写
+                drawRublevCharacter(centerX, centerY + 35, 1.18, theme, mood, "stand");
+            }
+
+            // 3. 底部签名字样贴纸：BWEH! • LUCKY 2026
+            const stickerW = 420;
+            const stickerH = 76;
+            ctx.save();
+            ctx.translate(centerX, centerY + 445);
+            ctx.rotate(-0.03);
+            ctx.shadowColor = "rgba(0,0,0,0.18)";
+            ctx.shadowBlur = 16;
+            ctx.shadowOffsetY = 8;
+            ctx.fillStyle = theme.primary;
+            roundRect(ctx, -stickerW / 2, -stickerH / 2, stickerW, stickerH, 38);
+            ctx.fill();
+
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 6;
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "700 32px 'Fredoka', sans-serif";
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            const tagLabel = mood === "birthday"
+                ? "HAPPY BIRTHDAY OCT 20 🎂"
+                : (mood === "roar" ? "BWEH!! BE KIND 2027 🔥" : "BE KIND • 2027 🎾");
+            ctx.fillText(tagLabel, 0, 2);
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        /**
+         * 精细矢量绘制 Q 版卢宝（飞天小女警画风大眼睛 + 中分金色卷发 + V字发带 + 网球道具）
+         */
+        function drawRublevCharacter(x, y, scale, theme, mood, pose) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(scale, scale);
+
+            ctx.lineJoin = "round";
+            ctx.lineCap = "round";
+
+            const outline = "#1e1b18";
+            const skin = "#ffe7d6";
+            const hairMain = "#e2be7d";
+            const hairShadow = "#c89f5d";
+            const eyeIris = "#4fa4d8";
+
+            // --- 后层蓬松波浪卷发（还原原月历册自然S型外翘发尾，无猫耳尾巴） ---
+            ctx.fillStyle = hairMain;
+            ctx.strokeStyle = outline;
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.moveTo(-200, -35);
+            // 左侧三层波浪大卷
+            ctx.bezierCurveTo(-265, -10, -270, 45, -225, 68);
+            ctx.bezierCurveTo(-268, 95, -255, 145, -205, 145);
+            ctx.bezierCurveTo(-225, 178, -175, 195, -135, 168);
+            // 脑后蓬松发尾弧线
+            ctx.quadraticCurveTo(0, 185, 135, 168);
+            // 右侧三层波浪大卷
+            ctx.bezierCurveTo(175, 195, 225, 178, 205, 145);
+            ctx.bezierCurveTo(255, 145, 268, 95, 225, 68);
+            ctx.bezierCurveTo(270, 45, 265, -10, 200, -35);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 后发卷度纹理线条
+            ctx.strokeStyle = hairShadow;
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.quadraticCurveTo(-235, 55, -205, 115);
+            ctx.moveTo(235, 55);
+            ctx.quadraticCurveTo(235, 55, 205, 115);
+            ctx.stroke();
+
+            // --- 身体与动作 ---
+            if (pose === "crawl") {
+                // 趴卧姿态
+                ctx.fillStyle = theme.shirtColor;
+                ctx.beginPath();
+                ctx.ellipse(0, 175, 125, 65, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // 伸出的小手手 + 护腕
+                drawHandWithWristband(-125, 195, theme, outline, skin);
+                drawHandWithWristband(125, 195, theme, outline, skin);
+            } else {
+                // 站立/跃起身体（飞天小女警标志性可爱短躯干与小短腿）
+                // 左腿 & 球鞋
+                ctx.fillStyle = skin;
+                ctx.fillRect(-62, 235, 44, 65);
+                ctx.strokeRect(-62, 235, 44, 65);
+                // 白袜子
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(-64, 265, 48, 35);
+                ctx.strokeRect(-64, 265, 48, 35);
+                // 运动鞋
+                ctx.fillStyle = theme.primary;
+                ctx.beginPath();
+                ctx.ellipse(-44, 312, 34, 20, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // 右腿 & 球鞋
+                ctx.fillStyle = skin;
+                ctx.fillRect(18, 235, 44, 65);
+                ctx.strokeRect(18, 235, 44, 65);
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(16, 265, 48, 35);
+                ctx.strokeRect(16, 265, 48, 35);
+                ctx.fillStyle = theme.primary;
+                ctx.beginPath();
+                ctx.ellipse(44, 312, 34, 20, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // 球衣上衣
+                ctx.fillStyle = theme.shirtColor;
+                ctx.beginPath();
+                ctx.moveTo(-85, 125);
+                ctx.lineTo(85, 125);
+                ctx.lineTo(100, 225);
+                ctx.lineTo(-100, 225);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // 球衣领口与小V标
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.moveTo(-35, 125);
+                ctx.lineTo(0, 152);
+                ctx.lineTo(35, 125);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                // 运动短裤
+                ctx.fillStyle = theme.secondary;
+                ctx.fillRect(-95, 215, 190, 42);
+                ctx.strokeRect(-95, 215, 190, 42);
+
+                // 手臂与专属道具
+                if (mood === "boss") {
+                    // 叉腰动作
+                    drawArmBent(-95, 150, -145, 195, -90, 225, theme, outline, skin);
+                    drawArmBent(95, 150, 145, 195, 90, 225, theme, outline, skin);
+                } else if (mood === "chill") {
+                    // 抱膝坐姿
+                    drawHandWithWristband(-45, 220, theme, outline, skin);
+                    drawHandWithWristband(45, 220, theme, outline, skin);
+                } else if (mood === "banana") {
+                    // 左手握网球拍，右手拿大香蕉（7月经典！）
+                    drawRacket(-165, 140, -0.45, theme);
+                    drawHandWithWristband(-115, 195, theme, outline, skin);
+                    drawBanana(130, 165, 0.35);
+                    drawHandWithWristband(105, 195, theme, outline, skin);
+                } else if (mood === "trophy") {
+                    // 11月高举金色冠军奖杯
+                    drawTrophyGraphic(165, 85, 1.15);
+                    drawHandWithWristband(125, 155, theme, outline, skin);
+                    drawHandWithWristband(-115, 185, theme, outline, skin);
+                } else if (mood === "coffee") {
+                    // 12月惬意手捧 Coffee Time 马克杯
+                    drawCoffeeMug(125, 175, theme);
+                    drawHandWithWristband(78, 185, theme, outline, skin);
+                    drawHandWithWristband(-115, 185, theme, outline, skin);
+                } else if (mood === "birthday") {
+                    // 10月20日专属：手捧双层生日蛋糕吹蜡烛
+                    drawBirthdayCake(0, 195);
+                    drawHandWithWristband(-105, 185, theme, outline, skin);
+                    drawHandWithWristband(105, 185, theme, outline, skin);
+                } else {
+                    // 默认挥拍 / 活力姿态
+                    drawRacket(165, 125, 0.42, theme);
+                    drawHandWithWristband(115, 185, theme, outline, skin);
+                    drawHandWithWristband(-115, 185, theme, outline, skin);
+                }
+            }
+
+            // --- 头部轮廓（大圆头，稍微带一点点小肉脸颊） ---
+            ctx.fillStyle = skin;
+            ctx.strokeStyle = outline;
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.moveTo(0, -155);
+            ctx.bezierCurveTo(135, -155, 208, -75, 204, 22);
+            ctx.bezierCurveTo(200, 118, 122, 175, 0, 175);
+            ctx.bezierCurveTo(-122, 175, -200, 118, -204, 22);
+            ctx.bezierCurveTo(-208, -75, -135, -155, 0, -155);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 腮红（可爱感灵魂；吹蜡烛时鼓腮腮红更明显！）
+            ctx.fillStyle = mood === "birthday" ? "rgba(244, 63, 94, 0.42)" : "rgba(244, 63, 94, 0.28)";
+            ctx.beginPath();
+            ctx.ellipse(-125, 86, mood === "birthday" ? 42 : 34, mood === "birthday" ? 24 : 18, 0, 0, Math.PI * 2);
+            ctx.ellipse(125, 86, mood === "birthday" ? 42 : 34, mood === "birthday" ? 24 : 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 腮红小斜线（增添小猫咪般软萌俏皮感）
+            ctx.strokeStyle = "rgba(244, 63, 94, 0.45)";
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(-136, 80); ctx.lineTo(-144, 92);
+            ctx.moveTo(-120, 80); ctx.lineTo(-128, 92);
+            ctx.moveTo(120, 80); ctx.lineTo(112, 92);
+            ctx.moveTo(136, 80); ctx.lineTo(128, 92);
+            ctx.stroke();
+
+            // 精致小巧鼻尖点缀
+            ctx.fillStyle = "#e09f87";
+            ctx.beginPath();
+            ctx.ellipse(0, 88, 6, 4, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // --- 清澈无框大眼睛（去掉下眼眶粗线，避免眼镜错觉，保留上挑猫系眼尾） ---
+            drawEyesByMood(mood, eyeIris, outline);
+
+            // --- 嘴巴与小猫咪神态细节 ---
+            drawMouthByMood(mood, outline);
+
+            // --- 标志性运动发带 + V字Logo ---
+            ctx.save();
+            ctx.fillStyle = theme.bandColor;
+            ctx.strokeStyle = outline;
+            ctx.lineWidth = 8;
+            ctx.beginPath();
+            ctx.moveTo(-198, -42);
+            ctx.quadraticCurveTo(0, -82, 198, -42);
+            ctx.lineTo(192, 2);
+            ctx.quadraticCurveTo(0, -36, -192, 2);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 发带中央 V 字胜利标
+            ctx.fillStyle = theme.bandLogoColor || "#ffffff";
+            ctx.beginPath();
+            ctx.moveTo(-36, -44);
+            ctx.lineTo(0, -24);
+            ctx.lineTo(36, -44);
+            ctx.lineTo(16, -44);
+            ctx.lineTo(0, -35);
+            ctx.lineTo(-16, -44);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            // --- 金色中分波浪卷刘海（还原原月历册自然分缕、发尾微翘的卷发造型） ---
+            ctx.fillStyle = hairMain;
+            ctx.strokeStyle = outline;
+            ctx.lineWidth = 7.5;
+
+            // 左侧主波浪刘海 + 侧边外翘卷发缕
+            ctx.beginPath();
+            ctx.moveTo(-2, -158);
+            ctx.bezierCurveTo(-95, -172, -168, -135, -192, -82);
+            ctx.bezierCurveTo(-232, -45, -238, 8, -202, 32);
+            ctx.bezierCurveTo(-192, 10, -182, -15, -168, -32);
+            ctx.bezierCurveTo(-155, -2, -138, 12, -122, 16);
+            ctx.bezierCurveTo(-125, -22, -112, -55, -82, -75);
+            ctx.bezierCurveTo(-48, -96, -18, -98, -2, -108);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 右侧主波浪刘海 + 侧边外翘卷发缕
+            ctx.beginPath();
+            ctx.moveTo(2, -158);
+            ctx.bezierCurveTo(95, -172, 168, -135, 192, -82);
+            ctx.bezierCurveTo(232, -45, 238, 8, 202, 32);
+            ctx.bezierCurveTo(192, 10, 182, -15, 168, -32);
+            ctx.bezierCurveTo(155, -2, 138, 12, 122, 16);
+            ctx.bezierCurveTo(125, -22, 112, -55, 82, -75);
+            ctx.bezierCurveTo(48, -96, 18, -98, 2, -108);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 卷发自然波浪纹理线与高光
+            ctx.strokeStyle = hairShadow;
+            ctx.lineWidth = 4.5;
+            ctx.beginPath();
+            ctx.moveTo(-45, -135);
+            ctx.bezierCurveTo(-95, -125, -135, -85, -148, -35);
+            ctx.moveTo(45, -135);
+            ctx.bezierCurveTo(95, -125, 135, -85, 148, -35);
+            ctx.moveTo(-145, -112);
+            ctx.bezierCurveTo(-185, -85, -205, -35, -198, 5);
+            ctx.moveTo(145, -112);
+            ctx.bezierCurveTo(185, -85, 205, -35, 198, 5);
+            ctx.stroke();
+
+            // --- 特殊头顶与情绪特效（10月网球砸头 / 4月汗滴星星） ---
+            if (mood === "dizzy") {
+                // 头顶弹跳网球 + 撞击放射线
+                drawTennisBall(0, -185, 44, "#bef264", true);
+                ctx.strokeStyle = outline;
+                ctx.lineWidth = 5;
+                for (let a = -60; a <= 60; a += 30) {
+                    const rad = (a - 90) * Math.PI / 180;
+                    ctx.beginPath();
+                    ctx.moveTo(Math.cos(rad) * 62, -185 + Math.sin(rad) * 62);
+                    ctx.lineTo(Math.cos(rad) * 95, -185 + Math.sin(rad) * 95);
+                    ctx.stroke();
+                }
+            } else if (mood === "shocked") {
+                // 飞溅汗滴与惊吓小星星
+                ctx.fillStyle = "#38bdf8";
+                ctx.strokeStyle = outline;
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.ellipse(-225, -55, 22, 11, -0.4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                drawStar(-210, 130, 5, 28, 13, "#facc15");
+                drawStar(-245, 105, 5, 18, 8, "#fb923c");
+            }
+
+            ctx.restore();
+        }
+
+        /**
+         * 绘制不同情绪下的大眼睛
+         */
+        function drawEyesByMood(mood, irisColor, outline) {
+            const leftX = -82;
+            const rightX = 82;
+            const eyeY = 48;
+            const rOuter = 68;
+
+            if (mood === "dizzy") {
+                // 螺旋晕晕眼（10月经典）
+                [leftX, rightX].forEach(ex => {
+                    ctx.fillStyle = "#ffffff";
+                    ctx.strokeStyle = outline;
+                    ctx.lineWidth = 8;
+                    ctx.beginPath();
+                    ctx.arc(ex, eyeY, rOuter, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // 绘制螺旋线
+                    ctx.lineWidth = 6;
+                    ctx.beginPath();
+                    for (let t = 0; t < 24; t += 0.3) {
+                        const sr = t * 2.4;
+                        const sx = ex + Math.cos(t) * sr;
+                        const sy = eyeY + Math.sin(t) * sr;
+                        if (t === 0) ctx.moveTo(sx, sy);
+                        else ctx.lineTo(sx, sy);
+                    }
+                    ctx.stroke();
+                });
+                return;
+            }
+
+            if (mood === "wink") {
+                // 左眼大眼，右眼俏皮眨眼
+                drawSingleBigEye(leftX, eyeY, rOuter, irisColor, outline, "normal");
+                ctx.strokeStyle = outline;
+                ctx.lineWidth = 10;
+                ctx.beginPath();
+                ctx.moveTo(rightX - 45, eyeY - 12);
+                ctx.lineTo(rightX + 35, eyeY + 8);
+                ctx.lineTo(rightX - 35, eyeY + 28);
+                ctx.stroke();
+                return;
+            }
+
+            if (mood === "birthday") {
+                // 10月20日闭眼用力许愿吹蜡烛（> < 萌眼）
+                ctx.strokeStyle = outline;
+                ctx.lineWidth = 11;
+                // 左眼 >
+                ctx.beginPath();
+                ctx.moveTo(leftX - 36, eyeY - 26);
+                ctx.lineTo(leftX + 32, eyeY + 2);
+                ctx.lineTo(leftX - 36, eyeY + 28);
+                ctx.stroke();
+                // 右眼 <
+                ctx.beginPath();
+                ctx.moveTo(rightX + 36, eyeY - 26);
+                ctx.lineTo(rightX - 32, eyeY + 2);
+                ctx.lineTo(rightX + 36, eyeY + 28);
+                ctx.stroke();
+
+                // 许愿眉毛
+                ctx.lineWidth = 8;
+                ctx.beginPath();
+                ctx.moveTo(leftX - 38, eyeY - 62);
+                ctx.lineTo(leftX + 38, eyeY - 45);
+                ctx.moveTo(rightX + 38, eyeY - 62);
+                ctx.lineTo(rightX - 38, eyeY - 45);
+                ctx.stroke();
+                return;
+            }
+
+            const eyeStyle = (mood === "shocked") ? "wide" : (mood === "boss" || mood === "roar" || mood === "pout" || mood === "angry_cute") ? "fierce" : "normal";
+            drawSingleBigEye(leftX, eyeY, rOuter, irisColor, outline, eyeStyle);
+            drawSingleBigEye(rightX, eyeY, rOuter, irisColor, outline, eyeStyle);
+
+            // 眉毛
+            ctx.strokeStyle = outline;
+            ctx.lineWidth = 9;
+            if (eyeStyle === "fierce") {
+                ctx.beginPath();
+                ctx.moveTo(leftX - 42, eyeY - 74);
+                ctx.lineTo(leftX + 48, eyeY - 46);
+                ctx.moveTo(rightX + 42, eyeY - 74);
+                ctx.lineTo(rightX - 48, eyeY - 46);
+                ctx.stroke();
+            } else if (mood === "chill") {
+                ctx.beginPath();
+                ctx.moveTo(leftX - 38, eyeY - 65);
+                ctx.quadraticCurveTo(leftX, eyeY - 78, leftX + 38, eyeY - 65);
+                ctx.moveTo(rightX - 38, eyeY - 65);
+                ctx.quadraticCurveTo(rightX, eyeY - 78, rightX + 38, eyeY - 65);
+                ctx.stroke();
+            }
+        }
+
+        function drawSingleBigEye(cx, cy, r, irisColor, outline, style) {
+            ctx.save();
+            const isLeft = cx < 0;
+
+            // 1. 柔和无框眼白（不画粗黑下眼眶，彻底告别“戴眼镜”的错觉！）
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.ellipse(cx, cy + 2, r * 0.96, r * 0.92, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 极淡的眼周阴影替代硬黑框
+            ctx.strokeStyle = "rgba(30, 27, 24, 0.22)";
+            ctx.lineWidth = 3.5;
+            ctx.stroke();
+
+            if (style === "wide") {
+                // 惊恐小瞳孔
+                ctx.fillStyle = irisColor;
+                ctx.beginPath();
+                ctx.arc(cx, cy + 2, 23, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = "#090d16";
+                ctx.beginPath();
+                ctx.arc(cx, cy + 2, 12, 0, Math.PI * 2);
+                ctx.fill();
+            } else {
+                // 2. 清澈大虹膜 + 黑色瞳孔 + 双高光星芒
+                const offsetX = isLeft ? 7 : -7;
+                ctx.fillStyle = irisColor;
+                ctx.beginPath();
+                ctx.arc(cx + offsetX, cy + 5, r * 0.76, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = "#0f172a";
+                ctx.beginPath();
+                ctx.arc(cx + offsetX, cy + 5, r * 0.56, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 主高光 & 副高光（水灵灵的猫眼质感）
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.arc(cx + offsetX - 15, cy - 12, r * 0.23, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(cx + offsetX + 14, cy + 16, r * 0.10, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // 3. 灵动猫系上眼线（眼尾微微上挑，不闭合圆框，自然又有神）
+            ctx.strokeStyle = outline;
+            ctx.lineWidth = 8.5;
+            ctx.beginPath();
+            if (isLeft) {
+                ctx.moveTo(cx - r * 1.06, cy - 14);
+                ctx.quadraticCurveTo(cx - r * 0.85, cy - r * 0.88, cx + r * 0.15, cy - r * 0.88);
+                ctx.quadraticCurveTo(cx + r * 0.78, cy - r * 0.85, cx + r * 0.92, cy - 12);
+            } else {
+                ctx.moveTo(cx + r * 1.06, cy - 14);
+                ctx.quadraticCurveTo(cx + r * 0.85, cy - r * 0.88, cx - r * 0.15, cy - r * 0.88);
+                ctx.quadraticCurveTo(cx - r * 0.78, cy - r * 0.85, cx - r * 0.92, cy - 12);
+            }
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        /**
+         * 绘制嘴巴表情（融入自然小猫咪神态）
+         */
+        function drawMouthByMood(mood, outline) {
+            ctx.save();
+            ctx.strokeStyle = outline;
+            ctx.lineWidth = 6.5;
+
+            if (mood === "roar" || mood === "shocked") {
+                // 张大嘴呐喊 BWEH!
+                ctx.fillStyle = "#991b1b";
+                ctx.beginPath();
+                ctx.ellipse(0, 122, 34, 40, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // 舌头
+                ctx.fillStyle = "#fb7185";
+                ctx.beginPath();
+                ctx.ellipse(0, 138, 22, 15, 0, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (mood === "pout") {
+                // 鼓腮小猫波浪嘴（8月经典）
+                ctx.beginPath();
+                ctx.moveTo(-26, 116);
+                ctx.quadraticCurveTo(-13, 104, 0, 116);
+                ctx.quadraticCurveTo(13, 128, 26, 116);
+                ctx.stroke();
+            } else if (mood === "boss" || mood === "angry_cute") {
+                // 傲娇小猫咪倒八字撇嘴 (人字小猫嘴)
+                ctx.beginPath();
+                ctx.moveTo(-18, 122);
+                ctx.quadraticCurveTo(-8, 110, 0, 116);
+                ctx.quadraticCurveTo(8, 110, 18, 122);
+                ctx.stroke();
+            } else if (mood === "banana" || mood === "dizzy") {
+                // 呆萌小O嘴
+                ctx.fillStyle = "#f43f5e";
+                ctx.beginPath();
+                ctx.ellipse(0, 120, 14, 17, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+            } else if (mood === "birthday") {
+                // 鼓起腮帮子嘟嘴吹蜡烛 + 吹气小气流线
+                ctx.fillStyle = "#fb7185";
+                ctx.beginPath();
+                ctx.ellipse(0, 118, 14, 14, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // 鼓腮弧线
+                ctx.beginPath();
+                ctx.arc(-32, 116, 16, Math.PI * 0.65, Math.PI * 1.45);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(32, 116, 16, -Math.PI * 0.45, Math.PI * 0.35);
+                ctx.stroke();
+
+                // 吹向蛋糕的气流线
+                ctx.strokeStyle = "#38bdf8";
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.moveTo(-18, 138);
+                ctx.lineTo(-28, 162);
+                ctx.moveTo(0, 140);
+                ctx.lineTo(0, 166);
+                ctx.moveTo(18, 138);
+                ctx.lineTo(28, 162);
+                ctx.stroke();
+            } else {
+                // 软萌治愈“小猫咪 ω 微笑嘴”（无猫耳猫尾也能一眼get的小猫咪神态！）
+                ctx.beginPath();
+                ctx.moveTo(-24, 110);
+                ctx.quadraticCurveTo(-12, 126, 0, 113);
+                ctx.quadraticCurveTo(12, 126, 24, 110);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        // --- 辅助道具绘制函数 ---
+
+        function drawHandWithWristband(hx, hy, theme, outline, skin) {
+            ctx.save();
+            // 护腕
+            ctx.fillStyle = theme.bandColor;
+            ctx.strokeStyle = outline;
+            ctx.lineWidth = 7;
+            roundRect(ctx, hx - 24, hy - 26, 48, 22, 8);
+            ctx.fill();
+            ctx.stroke();
+
+            // 圆圆小拳头
+            ctx.fillStyle = skin;
+            ctx.beginPath();
+            ctx.arc(hx, hy + 8, 24, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawArmBent(x1, y1, x2, y2, x3, y3, theme, outline, skin) {
+            ctx.save();
+            ctx.strokeStyle = outline;
+            ctx.lineWidth = 28;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x3, y3);
+            ctx.stroke();
+
+            ctx.strokeStyle = skin;
+            ctx.lineWidth = 14;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawRacket(rx, ry, angle, theme) {
+            ctx.save();
+            ctx.translate(rx, ry);
+            ctx.rotate(angle);
+
+            // 拍柄
+            ctx.fillStyle = "#ffffff";
+            ctx.strokeStyle = "#1e1b18";
+            ctx.lineWidth = 7;
+            roundRect(ctx, -12, 55, 24, 95, 8);
+            ctx.fill();
+            ctx.stroke();
+
+            // 三角喉部
+            ctx.beginPath();
+            ctx.moveTo(-10, 55);
+            ctx.lineTo(-42, -5);
+            ctx.moveTo(10, 55);
+            ctx.lineTo(42, -5);
+            ctx.stroke();
+
+            // 拍框
+            ctx.strokeStyle = theme.primary;
+            ctx.lineWidth = 14;
+            ctx.beginPath();
+            ctx.ellipse(0, -85, 68, 92, 0, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.strokeStyle = "#1e1b18";
+            ctx.lineWidth = 5;
+            ctx.stroke();
+
+            // 拍网线
+            ctx.strokeStyle = "rgba(30, 27, 24, 0.35)";
+            ctx.lineWidth = 3;
+            for (let gx = -45; gx <= 45; gx += 18) {
+                ctx.beginPath();
+                ctx.moveTo(gx, -165);
+                ctx.lineTo(gx, -5);
+                ctx.stroke();
+            }
+            for (let gy = -155; gy <= -15; gy += 20) {
+                ctx.beginPath();
+                ctx.moveTo(-58, gy);
+                ctx.lineTo(58, gy);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        function drawBanana(bx, by, angle) {
+            ctx.save();
+            ctx.translate(bx, by);
+            ctx.rotate(angle);
+            ctx.fillStyle = "#facc15";
+            ctx.strokeStyle = "#1e1b18";
+            ctx.lineWidth = 7;
+            ctx.beginPath();
+            ctx.moveTo(-25, -65);
+            ctx.quadraticCurveTo(45, -10, 25, 70);
+            ctx.quadraticCurveTo(-15, 25, -25, -65);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawTrophyGraphic(tx, ty, s) {
+            ctx.save();
+            ctx.translate(tx, ty);
+            ctx.scale(s, s);
+            ctx.fillStyle = "#fbbf24";
+            ctx.strokeStyle = "#1e1b18";
+            ctx.lineWidth = 7;
+
+            // 底座
+            roundRect(ctx, -38, 55, 76, 24, 6);
+            ctx.fill();
+            ctx.stroke();
+
+            // 杯柱
+            ctx.fillRect(-12, 20, 24, 35);
+            ctx.strokeRect(-12, 20, 24, 35);
+
+            // 杯身
+            ctx.beginPath();
+            ctx.moveTo(-55, -55);
+            ctx.lineTo(55, -55);
+            ctx.quadraticCurveTo(48, 25, 0, 25);
+            ctx.quadraticCurveTo(-48, 25, -55, -55);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawCoffeeMug(mx, my, theme) {
+            ctx.save();
+            ctx.translate(mx, my);
+            ctx.fillStyle = "#ffffff";
+            ctx.strokeStyle = "#1e1b18";
+            ctx.lineWidth = 7;
+
+            // 杯把
+            ctx.beginPath();
+            ctx.arc(48, 0, 24, -Math.PI * 0.5, Math.PI * 0.5);
+            ctx.stroke();
+
+            // 杯身
+            roundRect(ctx, -48, -42, 96, 84, 14);
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = theme.primary;
+            ctx.font = "700 18px 'Fredoka', sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("COFFEE", 0, -6);
+            ctx.fillText("TIME", 0, 16);
+            ctx.restore();
+        }
+
+        /**
+         * 10月20日专属：双层草莓奶油生日蛋糕 + 蜡烛烛光
+         */
+        function drawBirthdayCake(cx, cy) {
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.strokeStyle = "#1e1b18";
+            ctx.lineWidth = 6;
+
+            // 蛋糕托盘
+            ctx.fillStyle = "#ffffff";
+            roundRect(ctx, -92, 42, 184, 18, 9);
+            ctx.fill();
+            ctx.stroke();
+
+            // 下层蛋糕体（香草奶油黄）
+            ctx.fillStyle = "#fef3c7";
+            roundRect(ctx, -74, 4, 148, 38, 10);
+            ctx.fill();
+            ctx.stroke();
+
+            // 上层蛋糕体（草莓粉）
+            ctx.fillStyle = "#fbcfe8";
+            roundRect(ctx, -54, -28, 108, 34, 10);
+            ctx.fill();
+            ctx.stroke();
+
+            // 奶油波浪糖霜顶
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.moveTo(-54, -20);
+            for (let wx = -54; wx < 54; wx += 18) {
+                ctx.quadraticCurveTo(wx + 9, -6, wx + 18, -20);
+            }
+            ctx.lineTo(54, -28);
+            ctx.lineTo(-54, -28);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // 4根彩色生日蜡烛 + 摇曳小火苗
+            const candleOffsets = [-32, -11, 11, 32];
+            const candleColors = ["#60a5fa", "#facc15", "#a78bfa", "#f472b6"];
+            candleOffsets.forEach((ox, i) => {
+                ctx.fillStyle = candleColors[i];
+                ctx.fillRect(ox - 4, -52, 8, 24);
+                ctx.strokeRect(ox - 4, -52, 8, 24);
+
+                // 小火苗（被吹得微微倾斜）
+                ctx.fillStyle = "#f97316";
+                ctx.beginPath();
+                ctx.ellipse(ox + 3, -62, 5, 8, 0.35, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = "#fef08a";
+                ctx.beginPath();
+                ctx.ellipse(ox + 3, -61, 2.5, 4.5, 0.35, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.restore();
+        }
+
+        /**
+         * 10月生日专属彩带纸屑装饰
+         */
+        function drawBirthdayConfetti(cx, cy) {
+            ctx.save();
+            const pieces = [
+                { dx: -320, dy: -220, rot: 0.4, c: "#f472b6" },
+                { dx: 330, dy: -200, rot: -0.5, c: "#facc15" },
+                { dx: -350, dy: 140, rot: 0.8, c: "#38bdf8" },
+                { dx: 345, dy: 160, rot: -0.3, c: "#a78bfa" },
+                { dx: -240, dy: -310, rot: 0.2, c: "#34d399" },
+                { dx: 250, dy: -295, rot: -0.7, c: "#fb923c" },
+                { dx: -280, dy: 270, rot: 0.5, c: "#facc15" },
+                { dx: 275, dy: 280, rot: -0.4, c: "#f472b6" }
+            ];
+            pieces.forEach(p => {
+                ctx.save();
+                ctx.translate(cx + p.dx, cy + p.dy);
+                ctx.rotate(p.rot);
+                ctx.fillStyle = p.c;
+                roundRect(ctx, -16, -7, 32, 14, 5);
+                ctx.fill();
+                ctx.restore();
+            });
+            ctx.restore();
+        }
+
+        function drawTennisBall(x, y, r, color, withOutline) {
+            ctx.save();
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (withOutline) {
+                ctx.strokeStyle = "#1e1b18";
+                ctx.lineWidth = Math.max(3, r * 0.14);
+                ctx.stroke();
+            }
+
+            // 网球白色弧线
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = Math.max(2.5, r * 0.12);
+            ctx.beginPath();
+            ctx.arc(x - r * 0.85, y, r * 0.85, -0.35 * Math.PI, 0.35 * Math.PI);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.arc(x + r * 0.85, y, r * 0.85, 0.65 * Math.PI, 1.35 * Math.PI);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawTrophyIcon(x, y, size, color) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.strokeStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(-size * 0.4, -size * 0.4);
+            ctx.lineTo(size * 0.4, -size * 0.4);
+            ctx.quadraticCurveTo(size * 0.3, size * 0.2, 0, size * 0.2);
+            ctx.quadraticCurveTo(-size * 0.3, size * 0.2, -size * 0.4, -size * 0.4);
+            ctx.moveTo(0, size * 0.2);
+            ctx.lineTo(0, size * 0.5);
+            ctx.moveTo(-size * 0.25, size * 0.5);
+            ctx.lineTo(size * 0.25, size * 0.5);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawStar(cx, cy, spikes, outerRadius, innerRadius, color) {
+            let rot = (Math.PI / 2) * 3;
+            let x = cx;
+            let y = cy;
+            const step = Math.PI / spikes;
+
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+
+        function wrapText(ctx, text, maxWidth) {
+            const words = text.split(" ");
+            const lines = [];
+            let currentLine = words[0] || "";
+
+            for (let i = 1; i < words.length; i++) {
+                const word = words[i];
+                const width = ctx.measureText(currentLine + " " + word).width;
+                if (width < maxWidth) {
+                    currentLine += " " + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        // 页面与字体加载完成后启动首次渲染
+        window.onload = () => {
+            initUI();
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(() => {
+                    renderWallpaper();
+                });
+            } else {
+                renderWallpaper();
+            }
+        };
+    </script>
+</body>
+</html>
